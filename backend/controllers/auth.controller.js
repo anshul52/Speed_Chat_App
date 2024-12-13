@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
+const { generateAccessToken } = require("../utils/token");
 
 // SIGN UP
 const createUser = async (req, res) => {
@@ -24,9 +25,11 @@ const createUser = async (req, res) => {
 
     const newUser = new User({ username, email, password: hashPassword, role });
     await newUser.save();
+    const token = generateAccessToken({ username: username });
     res.send({
       status: true,
       res: "User created Successfully !!",
+      token,
     });
   } catch (err) {
     console.error(err);
@@ -53,11 +56,18 @@ const signIn = async (req, res) => {
     }
 
     var Password = bcrypt.compareSync(password, userExist?.password);
-
+    if (!Password) {
+      return res.send({
+        status: false,
+        res: "User password is Invalid !!",
+      });
+    }
+    const token = generateAccessToken({ username: userExist?.username });
     res.send({
       status: true,
       res: "User LogIn Successfully !!",
       userExist,
+      token,
     });
   } catch (err) {
     console.error(err);
